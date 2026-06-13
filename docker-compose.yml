@@ -1,0 +1,88 @@
+# One `docker compose up` brings up the full stack: API, Postgres, Redis,
+# a Celery worker and the Celery beat scheduler. The web service runs
+# migrations + collectstatic + demo seed on startup via the entrypoint.
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment: &app-env
+    DJANGO_SETTINGS_MODULE: config.settings.production
+    DJANGO_SECRET_KEY: docker-dev-secret-change-me
+    DJANGO_DEBUG: "false"
+    DJANGO_ALLOWED_HOSTS: "*"
+    DJANGO_SECURE_SSL_REDIRECT: "false"
+    DATABASE_URL: postgres://ahoum:ahoum@db:5432/ahoum
+    REDIS_URL: redis://redis:6379/0
+    EMAIL_URL: consolemail://
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ahoum
+      POSTGRES_PASSWORD: ahoum
+      POSTGRES_DB: ahoum
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ahoum"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    <<: *app
+    environment:
+      <<: *app-env
+      RUN_MIGRATIONS: "1"
+      SEED_DEMO: "1"
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    ports:
+      - "8000:8000"
+
+  worker:
+    <<: *app
+    environment:
+      <<: *app-env
+      RUN_MIGRATIONS: "0"
+    command: celery -A config worker -l info
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+  beat:
+    <<: *app
+    environment:
+      <<: *app-env
+      RUN_MIGRATIONS: "0"
+    command: celery -A config beat -l info
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+volumes:
+  pgdata:
