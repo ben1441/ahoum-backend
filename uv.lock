@@ -15,6 +15,7 @@ dependencies = [
     { name = "djangorestframework-simplejwt" },
     { name = "drf-spectacular" },
     { name = "gunicorn" },
+    { name = "honcho" },
     { name = "psycopg", extra = ["binary"] },
     { name = "redis" },
     { name = "whitenoise" },
@@ -23,7 +24,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "factory-boy" },
-    { name = "honcho" },
     { name = "pytest" },
     { name = "pytest-django" },
     { name = "ruff" },
@@ -39,6 +39,7 @@ requires-dist = [
     { name = "djangorestframework-simplejwt", specifier = ">=5.4" },
     { name = "drf-spectacular", specifier = ">=0.28" },
     { name = "gunicorn", specifier = ">=23.0" },
+    { name = "honcho", specifier = ">=2.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
     { name = "redis", specifier = ">=5.2" },
     { name = "whitenoise", specifier = ">=6.8" },
@@ -47,7 +48,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "factory-boy", specifier = ">=3.3" },
-    { name = "honcho", specifier = ">=2.0" },
     { name = "pytest", specifier = ">=8.3" },
     { name = "pytest-django", specifier = ">=4.9" },
     { name = "ruff", specifier = ">=0.9" },
