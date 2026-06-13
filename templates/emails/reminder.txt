@@ -1,0 +1,8 @@
+Hi,
+
+This is a reminder that "{{ event.title }}" starts soon, at {{ event.starts_at }} (UTC).
+
+Location: {{ event.location }}
+
+See you there,
+The Ahoum team

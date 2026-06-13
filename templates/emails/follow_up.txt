@@ -1,0 +1,8 @@
+Hi,
+
+Thanks for enrolling in "{{ event.title }}". We hope you're looking forward to it!
+
+If you have any questions before the session, just reply to this email.
+
+See you there,
+The Ahoum team

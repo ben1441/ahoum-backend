@@ -1,0 +1,5 @@
+Welcome to Ahoum!
+
+Your verification code is: {{ code }}
+
+It expires in {{ ttl_minutes }} minutes. If you didn't request this, you can ignore this email.
