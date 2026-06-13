@@ -149,6 +149,26 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+# --- Logging -----------------------------------------------------------
+# Containers expect logs on stdout/stderr (12-factor). Django's default config
+# only mails request errors to admins when DEBUG is off, so 500 tracebacks would
+# otherwise vanish; route them to the console instead.
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
+    },
+}
+
 # --- Domain knobs ------------------------------------------------------
 
 OTP_TTL_SECONDS = env.int("OTP_TTL_SECONDS", default=300)  # 5 minutes
