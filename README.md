@@ -11,7 +11,9 @@ default `User` while signup exposes no username, OTP done like a security engine
 capacity that holds under a thundering herd, and scheduled mail that never
 double-sends. Those are written up in [Design decisions](#design-decisions--tradeoffs).
 
-- **Live demo:** _(added after deploy — see [Deployment](#deployment))_
+- **Live demo:** <https://ahoum-events-api.onrender.com> · Swagger:
+  <https://ahoum-events-api.onrender.com/api/docs/>
+  _(free Render instance — the first request after idle takes ~30s to wake)_
 - **API docs (Swagger):** `/api/docs/` · **OpenAPI schema:** `/api/schema/`
 - **Postman collection:** [`docs/postman_collection.json`](docs/postman_collection.json)
 - **Architecture & ER diagram:** [`docs/architecture.md`](docs/architecture.md)
@@ -224,14 +226,23 @@ boring.
 
 ## Deployment
 
-The repo includes a [`render.yaml`](render.yaml) blueprint targeting Render
-(web service + managed Postgres + Key Value/Redis). On Render's free tier there
-are no separate background workers, so the demo runs gunicorn + the Celery worker
-+ beat together in one service via `honcho` ([`Procfile`](Procfile)) — explicitly
-a demo compromise; in production these are separate scalable services (as they are
-in `docker-compose.yml`).
+Live at <https://ahoum-events-api.onrender.com>, deployed from this repo via the
+[`render.yaml`](render.yaml) blueprint (Dockerized web service + managed Postgres +
+Key Value/Redis). The same seeded demo accounts above work against it.
 
-_Live URL: added here after deploy._
+**Free-tier shape (an honest tradeoff).** A free Render web instance has ~512 MB
+RAM and no separate worker dynos. Running gunicorn *plus* a Celery worker (which
+forks 8 processes) *plus* beat in one container OOM-kills it, so the live demo runs
+the **web process only with Celery in eager mode** — OTP emails still send inline
+on signup (visible in the service logs). The two beat-scheduled jobs (follow-up and
+reminder) are proven by the test suite and run for real in the full
+`docker-compose.yml` stack; on a paid plan you'd add a `type: worker` service. This
+is the kind of free-tier compromise worth naming rather than hiding.
+
+One Render-specific gotcha worth recording: a custom Docker Command **replaces** the
+image's `ENTRYPOINT`, so the migration/seed entrypoint is invoked explicitly in the
+command (`/app/docker/entrypoint.sh gunicorn …`). The [`Procfile`](Procfile) carries
+the full web+worker+beat process model for platforms (or paid tiers) that support it.
 
 ## Project layout
 

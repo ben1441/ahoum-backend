@@ -1,8 +1,16 @@
-# Render blueprint. Spins up a Dockerized web service, managed Postgres, and a
-# Key Value (Redis) instance. The free web tier has no separate worker dynos, so
-# the start command runs gunicorn + Celery worker + beat together via honcho
-# (see Procfile) — a demo compromise; production splits these into their own
-# services as in docker-compose.yml.
+# Render blueprint — provisions a Dockerized web service, managed Postgres, and a
+# Key Value (Redis) instance. Mirrors the live demo deployment.
+#
+# Free-tier note: a free web instance has ~512 MB RAM and no separate worker
+# dynos. Running gunicorn + a Celery worker (8 prefork procs) + beat together
+# OOM-kills the instance, so the demo runs the web process only with Celery in
+# EAGER mode — OTP emails still send inline on signup. The two beat-scheduled
+# jobs (follow-up, reminder) are exercised by the full worker+beat stack in
+# docker-compose.yml and by the test suite; on a paid plan you'd add a
+# `type: worker` service running `celery -A config worker` and a beat process.
+#
+# The Dockerfile ENTRYPOINT (migrations + collectstatic + seed) is invoked
+# explicitly in dockerCommand because Render's custom command replaces ENTRYPOINT.
 
 services:
   - type: web
@@ -10,10 +18,9 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free
+    region: oregon
     healthCheckPath: /healthz/
-    # The entrypoint runs migrations/collectstatic/seed (RUN_MIGRATIONS=1),
-    # then honcho starts all three processes in the one container.
-    dockerCommand: honcho start
+    dockerCommand: /app/docker/entrypoint.sh gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.production
@@ -23,10 +30,16 @@ services:
         value: "false"
       - key: DJANGO_ALLOWED_HOSTS
         value: ".onrender.com"
+      # Render terminates TLS at the edge; an internal HTTP health check would be
+      # 301-redirected if Django also forced SSL, so disable the app-level redirect.
+      - key: DJANGO_SECURE_SSL_REDIRECT
+        value: "false"
       - key: RUN_MIGRATIONS
         value: "1"
       - key: SEED_DEMO
         value: "1"
+      - key: CELERY_TASK_ALWAYS_EAGER
+        value: "true"
       - key: EMAIL_URL
         value: consolemail://
       - key: DATABASE_URL
@@ -42,10 +55,12 @@ services:
   - type: keyvalue
     name: ahoum-redis
     plan: free
+    region: oregon
     ipAllowList: []
 
 databases:
   - name: ahoum-db
     plan: free
+    region: oregon
     databaseName: ahoum
     user: ahoum
