@@ -27,14 +27,38 @@ class Command(BaseCommand):
 
         now = timezone.now()
         specs = [
-            ("Sunrise Yoga", "Gentle morning vinyasa for all levels.", "english", "Goa",
-             now + timezone.timedelta(days=3), 20),
-            ("Sound Healing Circle", "Tibetan bowls and deep relaxation.", "english", "Pune",
-             now + timezone.timedelta(days=7), 2),
-            ("Breathwork Intensive", "Guided pranayama session.", "hindi", "Online",
-             now + timezone.timedelta(hours=0, minutes=45), None),
-            ("Past Meditation Retreat", "A weekend of silence.", "english", "Rishikesh",
-             now - timezone.timedelta(days=10), 30),
+            (
+                "Sunrise Yoga",
+                "Gentle morning vinyasa for all levels.",
+                "english",
+                "Goa",
+                now + timezone.timedelta(days=3),
+                20,
+            ),
+            (
+                "Sound Healing Circle",
+                "Tibetan bowls and deep relaxation.",
+                "english",
+                "Pune",
+                now + timezone.timedelta(days=7),
+                2,
+            ),
+            (
+                "Breathwork Intensive",
+                "Guided pranayama session.",
+                "hindi",
+                "Online",
+                now + timezone.timedelta(hours=0, minutes=45),
+                None,
+            ),
+            (
+                "Past Meditation Retreat",
+                "A weekend of silence.",
+                "english",
+                "Rishikesh",
+                now - timezone.timedelta(days=10),
+                30,
+            ),
         ]
         events = []
         for title, desc, lang, loc, starts, cap in specs:
